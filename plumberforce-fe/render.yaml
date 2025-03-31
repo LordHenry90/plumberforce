@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: salesforce-assistant-ui
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    repo: https://github.com/LordHenry90/salesforce-agent-frontend.git # Modifica con il tuo repository
+    branch: main
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: DEBUG
+        value: false
+      - key: MODEL_API_URL
+        # Modifica con l'URL del tuo spazio Hugging Face
+        value: https://lordhenry-salesforce-agent.hf.space
+      - key: API_KEY
+        # Imposta tramite dashboard Render o variabile d'ambiente
+        sync: false
+    autoDeploy: true
+    plan: free # Piano gratuito
