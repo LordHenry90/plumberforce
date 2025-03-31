@@ -143,3 +143,5 @@ Il sistema è strutturato secondo un'architettura distribuita che separa il fron
         Diagnostica: Monitoraggio prestazioni e utilizzo risorse
 
 Questa architettura è ottimizzata per operare entro i limiti dei servizi cloud gratuiti, distribuendo il carico tra diverse piattaforme e limitando il consumo di risorse sul singolo servizio.
+
+Servizio Render: https://salesforce-assistant-ui.onrender.com/
