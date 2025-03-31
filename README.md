@@ -1,11 +1,10 @@
 Architettura completa del progetto Plumberforce
 Panoramica dell'architettura
 Il sistema è strutturato secondo un'architettura distribuita che separa il frontend dall'elaborazione del backend, ottimizzata per servizi cloud gratuiti:
-┌─────────────────────┐      ┌─────────────────────────┐
-│                     │      │                         │
-│  Frontend (Render)  │◄────►│  Backend (Hugging Face) │
-│                     │      │                         │
-└─────────────────────┘      └─────────────────────────┘
+
+![image](https://github.com/user-attachments/assets/fbcc9a6e-602e-480b-be9a-bdd5da3e1591)
+
+
 1. Componente Backend (Hugging Face Spaces)
 Tecnologie principali
 
@@ -55,9 +54,8 @@ Aggiornamento UI in tempo reale
 Archiviazione conversazione in memoria
 
 3. Flusso delle comunicazioni
-┌──────────┐    WebSocket   ┌──────────┐    HTTP/REST   ┌──────────┐    API     ┌──────────┐
-│  Browser │◄──────────────►│ Frontend │◄──────────────►│  Backend │◄──────────►│   LLM    │
-└──────────┘                └──────────┘                └──────────┘            └──────────┘
+
+![image](https://github.com/user-attachments/assets/735ee36e-b780-4684-8984-0e6d1a532da2)
 
 Browser → Frontend: Comunicazione in tempo reale via WebSocket
 Frontend → Backend: Chiamate HTTP REST con client ID
