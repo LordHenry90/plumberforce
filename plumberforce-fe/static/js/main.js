@@ -164,34 +164,69 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Gestisci i messaggi WebSocket
-	function handleWebSocketMessage(message) {
-		switch (message.type) {
-			case 'user':
-				addUserMessage(message.content);
-				break;
-			case 'assistant':
-				addAssistantMessage(message.content);
-				// Assicurati di ripristinare lo stato qui
-				setProcessingState(false);
-				showFeedbackCard();
-				break;
-			case 'status':
-				addStatusMessage(message.content);
-				break;
-			case 'error':
-				addErrorMessage(message.content);
-				// Ripristina sempre lo stato anche in caso di errore
-				setProcessingState(false);
-				break;
-			default:
-				console.warn('Tipo di messaggio sconosciuto:', message.type);
-				// Ripristina lo stato anche per messaggi sconosciuti
-				setProcessingState(false);
-		}
-		
-		// Scorrimento automatico
-		scrollToBottom();
-	}
+function handleWebSocketMessage(message) {
+    switch (message.type) {
+        case 'user':
+            addUserMessage(message.content);
+            break;
+        case 'assistant': // Questo caso potrebbe non essere più usato, ma lo lasciamo per compatibilità
+            addAssistantMessage(message.content);
+            setProcessingState(false);
+            showFeedbackCard();
+            break;
+        // --- INIZIO NUOVO CODICE ---
+        case 'file_ready':
+            // Funzione per creare un link di download
+            createDownloadLink(message.fileName, message.content);
+            // Ripristina l'interfaccia
+            addStatusMessage("Soluzione completata! Il file è pronto per il download.");
+            setProcessingState(false);
+            showFeedbackCard(); // Puoi decidere se mostrare il feedback anche qui
+            break;
+        // --- FINE NUOVO CODICE ---
+        case 'status':
+            addStatusMessage(message.content);
+            break;
+        case 'error':
+            addErrorMessage(message.content);
+            setProcessingState(false);
+            break;
+        default:
+            console.warn('Tipo di messaggio sconosciuto:', message.type);
+            setProcessingState(false);
+    }
+    scrollToBottom();
+}
+
+// --- INIZIO NUOVA FUNZIONE ---
+// Funzione per creare e mostrare un link di download
+function createDownloadLink(fileName, fileContent) {
+    // Crea un Blob (Binary Large Object) dal contenuto del file
+    const blob = new Blob([fileContent], { type: 'text/markdown;charset=utf-8' });
+    
+    // Crea un URL temporaneo per il Blob
+    const url = URL.createObjectURL(blob);
+    
+    // Crea un elemento <a> (link)
+    const link = document.createElement('a');
+    link.className = 'btn btn-success mt-2';
+    link.href = url;
+    link.download = fileName; // Questo attributo dice al browser di scaricare il file con questo nome
+    link.textContent = `Scarica ${fileName}`;
+    link.target = '_blank'; // Apre in una nuova scheda, buona pratica
+
+    // Aggiungi un contenitore per il pulsante
+    const buttonContainer = document.createElement('div');
+    buttonContainer.className = 'message assistant-message'; // Lo stiliamo come un messaggio dell'assistente
+    buttonContainer.appendChild(link);
+    
+    conversation.appendChild(buttonContainer);
+
+    // Pulisce l'URL temporaneo dopo che il link è stato usato (buona pratica per la memoria)
+    // Non è strettamente necessario se il link rimane visibile, ma utile da sapere
+    // window.addEventListener('focus', () => URL.revokeObjectURL(url), { once: true });
+}
+// --- FINE NUOVA FUNZIONE ---
     
     // Invia messaggio al server
     function sendMessage() {
