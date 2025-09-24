@@ -1,35 +1,28 @@
+# Usa un'immagine Python slim come base
 FROM python:3.10-slim
 
+# Imposta la directory di lavoro
 WORKDIR /app
 
-# Installa le dipendenze di sistema necessarie
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copia i file dei requisiti
+# Copia solo il file dei requisiti per sfruttare la cache di Docker
 COPY requirements.txt .
 
 # Installa le dipendenze Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Crea le directory necessarie
-RUN mkdir -p templates static static/css static/js static/img
+# Copia il resto del codice dell'applicazione
+COPY . .
 
-# Copia i file dell'applicazione
-COPY app.py salesforce_agent.py ./
-COPY templates/ templates/
-COPY static/ static/
-
-# Variabili d'ambiente
-ENV PORT=8000
-ENV MODEL_PATH="llama3-8b-instruct"
-ENV QUANTIZE="True"
-ENV DEBUG="False"
-
-# Esponi la porta
+# Railway fornirà la variabile $PORT. Uvicorn la userà automaticamente.
+# Non è necessario esporre la porta esplicitamente, ma è buona norma.
 EXPOSE 8000
 
-# Comando di avvio
-CMD ["python", "app.py"]
+#
+# --- COMANDO DI AVVIO CORRETTO PER LA PRODUZIONE ---
+#
+# Avvia l'applicazione usando Uvicorn, un server ASGI performante.
+# --host 0.0.0.0: Rende l'applicazione accessibile dall'esterno del container.
+# --port $PORT: Usa la porta fornita da Railway (o 8000 come default).
+# app:app: Fa riferimento all'oggetto FastAPI "app" nel file "app.py".
+#
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
