@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copia il resto del codice dell'applicazione
 COPY . .
 
-# Railway fornirà la variabile $PORT. Uvicorn la userà automaticamente.
+# Railway fornirà la variabile $PORT, che Uvicorn userà.
 # Non è necessario esporre la porta esplicitamente, ma è buona norma.
 EXPOSE 8000
 
@@ -22,7 +22,7 @@ EXPOSE 8000
 #
 # Avvia l'applicazione usando Uvicorn, un server ASGI performante.
 # --host 0.0.0.0: Rende l'applicazione accessibile dall'esterno del container.
-# --port $PORT: Usa la porta fornita da Railway (o 8000 come default).
+# --port 8000: Railway mapperà automaticamente la sua porta a questa.
 # app:app: Fa riferimento all'oggetto FastAPI "app" nel file "app.py".
 #
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
