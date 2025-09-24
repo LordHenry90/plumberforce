@@ -17,6 +17,9 @@ DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 MODEL_API_URL = os.environ.get("MODEL_API_URL", "https://lordhenry-salesforce-agent.hf.space")
 API_KEY = os.environ.get("API_KEY", "")  # Per sicurezza tra frontend e backend
 
+# Aggiungi la nuova variabile d'ambiente in cima al file
+N8N_WEBHOOK_URL = os.environ.get("N8N_WEBHOOK_URL", "")
+
 # Inizializza FastAPI
 app = FastAPI(title="Salesforce AI Assistant Frontend")
 
@@ -206,52 +209,52 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await manager.connect(websocket, client_id)
     try:
         while True:
-            # Ricevi messaggio dal client
             data = await websocket.receive_json()
-            
-            # Processa la query
             query = data.get("query", "")
-            
-            # Aggiungi alla cronologia come messaggio utente
+
+            # Messaggio utente
             await manager.send_message(
                 {"type": "user", "content": query, "timestamp": time.time()},
                 client_id
             )
-            
-            # Invia notifica di elaborazione
+            # Messaggio di stato
             await manager.send_message(
-                {"type": "status", "content": "Elaborazione in corso...", "timestamp": time.time()},
+                {"type": "status", "content": "Il team di agenti AI ha iniziato a lavorare...", "timestamp": time.time()},
                 client_id
             )
-            
+
             try:
-                # Invia la richiesta al backend CON IL CLIENT_ID
-                backend_response = call_backend_api(
-                    "query",
-                    data={"query": query, "client_id": client_id},  # Aggiungi client_id
-                    method="POST",
-                    timeout=60
+                # --- INIZIO MODIFICA ---
+                # Chiama l'automazione n8n invece del vecchio backend
+                if not N8N_WEBHOOK_URL:
+                    raise Exception("N8N_WEBHOOK_URL non è configurato.")
+
+                n8n_response = requests.post(
+                    N8N_WEBHOOK_URL,
+                    json={"query": query},
+                    timeout=300  # Aumenta il timeout, n8n potrebbe impiegare tempo
                 )
-                
-                if "error" in backend_response:
-                    error_msg = str(backend_response["error"])
-                    await manager.send_message(
-                        {"type": "error", "content": f"Errore backend: {error_msg}", "timestamp": time.time()},
-                        client_id
-                    )
-                    continue
-                
-                # Invia risposta al client
+                n8n_response.raise_for_status()
+                file_data = n8n_response.json()
+
+                # Invia il file al client con un nuovo tipo di messaggio
                 await manager.send_message(
-                    {"type": "assistant", "content": backend_response.get("response", ""), "timestamp": time.time()},
+                    {
+                        "type": "file_ready",
+                        "content": file_data.get("fileContent", ""),
+                        "fileName": file_data.get("fileName", "solution.md"),
+                        "timestamp": time.time()
+                    },
                     client_id
                 )
+                # --- FINE MODIFICA ---
+
             except Exception as e:
                 await manager.send_message(
-                    {"type": "error", "content": f"Errore: {str(e)}", "timestamp": time.time()},
+                    {"type": "error", "content": f"Errore durante l'esecuzione dell'automazione: {str(e)}", "timestamp": time.time()},
                     client_id
                 )
-    
+
     except WebSocketDisconnect:
         manager.disconnect(client_id)
 
